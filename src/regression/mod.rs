@@ -69,12 +69,13 @@ pub fn plot_stuff_label(betas: &DVector<f64>, points: &Vec<Point>, label: &str) 
 
     let line = |x: f64| betas.iter().enumerate().fold(0.0, |sum, (i, b)| sum + b * x.powi(i as i32));
 
-    // gnuplot
+    //TODO: fix this 0-centered thing (center it on data, not 0)
     let max_x = points.iter().fold(0.0, |max, p| p.x.max(max)) + 1.0;
+    let min_x = points.iter().fold(0.0, |min, p| p.x.min(min)) - 1.0;
 
-    // make a vector between 0 and max_x in steps of 0.1
+    // make a vector between min_x and max_x in steps of 0.1
     let mut x_steps = vec![];
-    for i in 0..(max_x as usize) {
+    for i in (min_x as i32)..(max_x as i32) {
         for j in 0..10 {
             x_steps.push((i as f64) + 0.1 * (j as f64));
         }
@@ -87,8 +88,8 @@ pub fn plot_stuff_label(betas: &DVector<f64>, points: &Vec<Point>, label: &str) 
     .points(points.iter().map(|p| p.x), 
                         points.iter().map(|p| p.y), 
                         &[Caption("Datapoints"), LineWidth(1.5)])
-        .set_x_range(AutoOption::Fix(0.0), AutoOption::Auto)
-        .set_y_range(AutoOption::Fix(0.0), AutoOption::Auto)
+        .set_x_range(AutoOption::Auto, AutoOption::Auto)
+        .set_y_range(AutoOption::Auto, AutoOption::Auto)
         .set_x_label("x", &[])
         .set_y_label("y", &[])
         .label(label, Coordinate::Graph(0.5), Coordinate::Graph(0.9), &[])
