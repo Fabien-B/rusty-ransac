@@ -11,8 +11,8 @@ pub struct Point {
     pub y: f64
 }
 
-pub fn get_betas(points: &Vec<Point>, order: u32) -> DVector<f64>{
-    let (x, y) = get_x_y(&points, order as u32);
+pub fn get_betas(points: &Vec<Point>, order: usize) -> DVector<f64>{
+    let (x, y) = get_x_y(&points, order);
     linear_regression(x, y)
 }
 
@@ -40,7 +40,7 @@ pub fn parse_points(filename: &str) -> Result<Vec<Point>, Box<Error>> {
         Ok(points)
 }
 
-pub fn get_x_y(points: &Vec<Point>, order: u32) -> (DMatrix<f64>, DVector<f64>) {
+pub fn get_x_y(points: &Vec<Point>, order: usize) -> (DMatrix<f64>, DVector<f64>) {
     let mut xs:Vec<Matrix<f64, U1, Dynamic, _>> = Vec::new();
     let mut ys:Vec<f64> = Vec::new();
 
@@ -70,7 +70,7 @@ pub fn plot_stuff_label(betas: &DVector<f64>, points: &Vec<Point>, label: &str) 
     let line = |x: f64| betas.iter().enumerate().fold(0.0, |sum, (i, b)| sum + b * x.powi(i as i32));
 
     // gnuplot
-    let max_x = points.iter().fold(0.0, |max, p| p.x.max(max) + 1.0);
+    let max_x = points.iter().fold(0.0, |max, p| p.x.max(max)) + 1.0;
 
     // make a vector between 0 and max_x in steps of 0.1
     let mut x_steps = vec![];
