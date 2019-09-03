@@ -1,49 +1,33 @@
 
-use std::env;
 use rand::seq::SliceRandom;
 mod regression;
 use regression::Point;
 use std::f64;
 use nalgebra::base::DVector;
 
-static THRESHOLD: f64 = 3.0;
 
-fn main() {
-  let args: Vec<String> = env::args().collect();
-  let filename = &args[1];
-  let num_iter: u32 = args[2].parse().unwrap();
-  let threshold: f64 = args[3].parse().unwrap();
-
-  let points = match regression::parse_points(filename) {
-    Ok(points) => points,
-    Err(err) => {
-      println!("Problem reading file {}: {}", filename, err.to_string());
-      std::process::exit(1)
-    }
-  };
-  
-  let distance = |p: &Point, betas: &DVector<f64>| (betas[1]*p.x + -p.y + betas[0]).abs() / (betas[1].powi(2)+1.0).sqrt(); //closure giving distance to model
-  //TODO make a set of distance functions (especially make distance function for 3rd order). (and automatically choose distance function?)
-  
-  ransac_iter(&points, num_iter, threshold, distance, 3);
-
+pub fn distance_2d(p: &Point, betas: &DVector<f64>) -> f64 {
+    (betas[1]*p.x + -p.y + betas[0]).abs() / (betas[1].powi(2)+1.0).sqrt()
 }
 
+pub fn ransac_iter_2d(source:&Vec<Point>, num_iter: u32, threshold: f64) -> (Option<DVector<f64>>, Vec<Point>) {
+    ransac_iter(source, num_iter, threshold, distance_2d, 2)
+}
 
-fn ransac_iter<F>(source:&Vec<Point>, num_iter: u32, threshold: f64, distance: F, order: usize)
+pub fn ransac_iter<F>(source:&Vec<Point>, num_iter: u32, threshold: f64, distance: F, order: usize) -> (Option<DVector<f64>>, Vec<Point>)
 where F: Fn(&Point, &DVector<f64>) -> f64
 {
   let mut best_error = f64::MAX;
   let mut best_betas = None;
   let mut best_ensemble = vec![];
 
-  for k in 0..num_iter {
+  for _k in 0..num_iter {
     let (selected, _others) = split_random(source, order);       //split dataset
     let mut betas = regression::get_betas(&selected, order);    //evaluate model on small dataset part
 
     let ensemble:Vec<Point> = source.iter().filter(|&p| distance(p, &betas) < threshold).map(|p| p.clone()).collect();
 
-      let d = (source.len() as f64 * 0.6) as usize;
+      let d = (source.len() as f64 * 0.3) as usize;
 
       if ensemble.len() > d {
         betas = regression::get_betas(&ensemble, order);  //reajust model to ensemble
@@ -56,12 +40,7 @@ where F: Fn(&Point, &DVector<f64>) -> f64
         }
       }
   }
-
-    if let Some(final_beta) = best_betas {
-        regression::plot_stuff_label(&final_beta, &source, "best");
-    } else {
-        println!("No candidate found!!!");
-    }
+    (best_betas, best_ensemble)
 }
 
 fn split_random<T: Clone>(source:&Vec<T>, nb:usize) -> (Vec<T>, Vec<T>) {

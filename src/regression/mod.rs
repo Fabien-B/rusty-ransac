@@ -2,14 +2,15 @@
 use std::fs;
 use std::error::Error;
 use nalgebra::base::{Matrix, U1, DVector, DMatrix, dimension::Dynamic};
-use serde::Deserialize;
+// use serde::Deserialize;
+use super::
 use gnuplot::{Figure, AxesCommon, Caption, LineWidth, AutoOption, Coordinate};
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct Point {
-    pub x: f64,
-    pub y: f64
-}
+// #[derive(Debug, Clone, Deserialize)]
+// pub struct Point {
+//     pub x: f64,
+//     pub y: f64
+// }
 
 pub fn get_betas(points: &Vec<Point>, order: usize) -> DVector<f64>{
     let (x, y) = get_x_y(&points, order);
@@ -61,6 +62,7 @@ pub fn get_error(betas: &DVector<f64>, points: &Vec<Point>) -> f64 {
     points.iter().fold(0.0, |acc, p| acc + (line(p.x) - p.y).powi(2 as i32)) / points.len() as f64
 }
 
+#[allow(dead_code)]
 pub fn plot_stuff(betas: &DVector<f64>, points: &Vec<Point>) {
     plot_stuff_label(betas, points, "");
 }
